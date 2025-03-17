@@ -1,0 +1,7 @@
+How to run cursor from terminal
+
+cd /opt/
+./cursor.appimage --no-sandbox
+
+Proton vpn password
+fKwCt4r1F!dEhzs?
