@@ -3,7 +3,7 @@ import os
 import sys
 import aioconsole
 
-SERVER_IP = '192.168.242.58'
+SERVER_IP = '172.16.13.201'
 PORT = 12345
 BUFFER_SIZE = 65536
 
