@@ -71,6 +71,14 @@ async def receiver(reader):
             elif message.startswith("MSG:"):
                 print(f"\nServer: {message[4:]}")
             
+            elif message.startswith("ERROR:"):
+                print(f"\nServer Error: {message[6:]}")
+                return  # Exit if there's an error
+                
+            elif message == "Server shutting down" or message == "Server closed the connection":
+                print(f"\n{message}")
+                return  # Exit if server is shutting down
+                
     except asyncio.CancelledError:
         pass
     except Exception as e:
@@ -78,22 +86,35 @@ async def receiver(reader):
 
 async def client():
     """Run the client with separate tasks for sending and receiving."""
-    reader, writer = await asyncio.open_connection(SERVER_IP, PORT)
-    print(f"Connected to {SERVER_IP}:{PORT}")
-
-    send_task = asyncio.create_task(sender(writer))
-    receive_task = asyncio.create_task(receiver(reader))
-
     try:
-        # Wait for either task to finish (like when the user types 'exit')
-        await asyncio.gather(send_task, receive_task, return_exceptions=True)
-    finally:
-        send_task.cancel()
-        receive_task.cancel()
-        writer.close()
-        await writer.wait_closed()
-        print("Connection closed")
+        reader, writer = await asyncio.open_connection(SERVER_IP, PORT)
+        print(f"Connected to {SERVER_IP}:{PORT}")
+        
+        # First send a username to the server
+        username = await aioconsole.ainput("Enter your username: ")
+        writer.write(f"NAME:{username}".encode() + b'\n')
+        await writer.drain()
+        
+        # Wait briefly to see if there's an error response
+        await asyncio.sleep(0.5)
+        
+        send_task = asyncio.create_task(sender(writer))
+        receive_task = asyncio.create_task(receiver(reader))
 
+        try:
+            # Wait for either task to finish (like when the user types 'exit')
+            await asyncio.gather(send_task, receive_task, return_exceptions=True)
+        finally:
+            send_task.cancel()
+            receive_task.cancel()
+            writer.close()
+            await writer.wait_closed()
+            print("Connection closed")
+            
+    except ConnectionRefusedError:
+        print(f"Error: Could not connect to server at {SERVER_IP}:{PORT}")
+    except Exception as e:
+        print(f"Error connecting: {e}")
 
 # Run the client
 if __name__ == "__main__":
