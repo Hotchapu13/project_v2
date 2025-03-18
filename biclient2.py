@@ -94,7 +94,7 @@ async def client():
         await writer.wait_closed()
         print("Connection closed")
 
-# Install aioconsole if needed (you'll need to pip install aioconsole)
+
 # Run the client
 if __name__ == "__main__":
     asyncio.run(client())
